@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import { task } from 'ember-concurrency';
+import { task, timeout } from 'ember-concurrency';
 
 export default Ember.Component.extend({
 
@@ -7,9 +7,8 @@ export default Ember.Component.extend({
     window.console.log("start producing");
 
     for(let i = 0; i < 100; i++) {
-      window.console.log("producing next");
-      yield timeout(1000);
-//      this.get('data').pushObject(i);
+      yield timeout(100);
+      this.get('data').pushObject(i);
     }
 
     window.console.log("stop producing");
@@ -19,9 +18,12 @@ export default Ember.Component.extend({
     window.console.log("start consuming")
 
     while(true) {
-      window.console.log("consuming next");
-      this.get('out').pushObjects(this.get('data'));
-      this.set('data', Ember.A());
+      let data = this.get('data');
+      if(data.length > 0) {
+        this.get('out').pushObjects(data);
+        this.set('data', Ember.A());
+      }
+      yield timeout(300);
     }
 
     window.console.log("stop consuming")
@@ -36,7 +38,7 @@ export default Ember.Component.extend({
   actions: {
     start() {
       this.get('producer').perform();
-//      this.get('consumer').perform();
+      this.get('consumer').perform();
       window.console.log("started");
     }
   }
